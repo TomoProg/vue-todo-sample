@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Todoアプリ</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://kit.fontawesome.com/887314c349.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  </head>
+  <body>
+    <div class="cover-container d-flex w-100 h-100 p-3 mx-auto flex-column">
+      <header class="masthead">
+        <div class="inner">
+          <h3 class="masthead-brand">Todo</h3>
+          <nav class="nav nav-masthead justify-content-center">
+            <a class="nav-link active" href="./index.html">Home</a>
+            <!--a class="nav-link" href="#">ゴミ箱</a-->
+          </nav>
+        </div>
+      </header>
+
+      <main role="main" class="inner cover">
+        <div id="app">
+          <div class="form-group">
+            <label for="input-todo">Todo</label>
+            <input type="text" v-on:keydown.13="makeTodo" v-model="inputedTodo" class="form-control" id="input-todo" placeholder="タスクを入力してください。">
+          </div>
+          <div>
+            <ul id="todo-list" class="list-group">
+              <li class="list-group-item" v-on:click="changeState(todo);" v-for="todo in todoItems" :key="todo.id">
+                <span v-bind:class="{done: todo.done}">{{ todo.contents }}</span>
+                <i class="fas fa-trash" style="float: right; margin-top: 4px;" v-on:click.stop="remove(todo);"></i>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </main>
+
+      <footer class="mastfoot mt-auto text-center">
+        <div class="inner">
+          <p>Producted by TomoProg.</p>
+        </div>
+      </footer>
+    </div>
+    <script>
+      var vm = new Vue({
+        el: '#app',
+        data: {
+          inputedTodo: '',
+          todoItems: [],
+        },
+        created: function() {
+          const makeStorage = function(key, defaultValue) {
+            if(localStorage.getItem(key) === null) {
+              localStorage.setItem(key, JSON.stringify(defaultValue));
+            }
+          };
+          makeStorage('todos', []);
+          makeStorage('todosSeqId', 0);
+          this.todoItems = this.getTodos();
+        },
+        methods: {
+          getTodos: function() {
+            return JSON.parse(localStorage.getItem('todos'));
+          },
+          getLatestId: function() {
+            return parseInt(localStorage.getItem('todosSeqId'));
+          },
+          doNumbering: function() {
+            return this.getLatestId() + 1;
+          },
+          makeTodo: function() {
+            if(this.inputedTodo.trim().length < 1) {
+              return;
+            }
+            const model = this.makeTodoModel();
+            this.todoItems.push(model);
+            this.saveTodos();
+            this.saveTodosSeqId(model.id);
+            this.inputedTodo = '';
+          },
+          makeTodoModel: function() {
+            return {
+              id:  this.doNumbering(),
+              contents: this.inputedTodo,
+              done: false,
+            };
+          },
+          saveTodos: function() {
+            this.save('todos', this.todoItems);
+          },
+          saveTodosSeqId: function(seqId) {
+            this.save('todosSeqId', seqId);
+          },
+          save: function(key, obj) {
+            localStorage.setItem(key, JSON.stringify(obj));
+          },
+          changeState: function(todo) {
+            todo.done = !todo.done;
+            this.saveTodos();
+          },
+          remove: function(todo) {
+            this.todoItems = this.todoItems.filter(function(item) {
+              return item.id !== todo.id;
+            });
+            this.saveTodos();
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
